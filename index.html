@@ -1,0 +1,53 @@
+<canvas id="ctx" width="500" height="500" style="border: 1px solid #000"></canvas>
+
+<script type="text/javascript">
+	var ctx  = document.getElementById('ctx').getContext('2d')
+
+	//1. Modify Settings =
+	ctx.font = '30px Arial';  //; font used
+	// ctx.fillStyle = 'red';		// color of the text and forms
+	// ctx.globalAlpha = 0.5;		// transparency 0: invisible ; 1: visible
+	
+	// 2. Draw something
+	// ctx.fillText('Hello',50,50); //write text ... ctx.fillText('text', x, y)
+	// ctx.fillRect(50,50,100,100); // draw rectangle .. ctx.fillRect(startX, startY, width, height)
+	// ctx.clearRect(75,75,100,100); // clear canvas ... ctx.fillRect(startX, startY, width, height)
+
+	var HEIGHT = 500;
+	var WIDTH = 500;
+
+	var message = 'Bouncing';
+	
+	// player
+	var x = 50;
+	var y = 40; 
+	var spdX = 30;
+	var spdY = 5;
+	var name = 'P';
+
+	
+
+	ctx.fillText(name,x,y);
+
+	update();
+
+	setInterval(update, 40);
+
+	function update(){
+		x += spdX;
+		y += spdY;
+		ctx.fillText(name,x,y);
+		// console.log('hello', x)
+
+		if(x < 0 || x > WIDTH) {
+			console.log(message);
+			spdX = -spdX;
+		}
+
+		if(y < 0 || y > HEIGHT) {
+			console.log(message);
+			spdY = -spdY
+		}
+	}
+	
+</script>
