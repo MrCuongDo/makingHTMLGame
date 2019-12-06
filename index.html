@@ -31,7 +31,8 @@
 		height: 20,
 		name:'P',
 		color: "green",
-		hp: 20
+		hp: 20,
+		atkSpd : 1
 	}
 
 	let enemyList = {};
@@ -142,7 +143,7 @@
         enemy(id,x,y,spdX,spdY,width,height);  
 	}
 
-	upgrade = function (id, x, y, spdX, spdY,width,height) {
+	upgrade = function (id, x, y, spdX, spdY,width,height,category, color) {
 			let upgrade = {
 				x: x,
 				spdX: spdX,
@@ -151,7 +152,8 @@
 				width : width,
 				height: height,
 				name: "U" ,
-				color: "orange",
+				color: color,
+				category: category,
 				id: id
 			}
 
@@ -167,7 +169,14 @@
         var id = Math.random();
         var spdX = 0;
         var spdY = 0;
-        upgrade(id,x,y,spdX,spdY,width,height);  
+        if (Math.random() < 0.5) {
+        	var category = 'score';
+        	var color = 'orange';	
+        }else{
+			var category = 'atkSpd';
+        	var color = 'purple';	
+        }
+        upgrade(id,x,y,spdX,spdY,width,height,category,color);  
 	}
 
 	Bullet = function (id,x,y,spdX,spdY,width,height){
@@ -181,6 +190,7 @@
             width:width,
             height:height,
             color:'black',
+            timer: 0,
         };
         bulletList[id] = asd;
 	}
@@ -209,18 +219,40 @@
 		if(frameCount % 75 === 0)
 			randomlyGenerateUpgrade();
 
-		if(frameCount % 25 === 0)
+		if(frameCount % Math.round(25/player.atkSpd) === 0)
 			randomlyGenerateBullet();
 
- 		for(var key in bulletList){
+ 		for(let key in bulletList){
             updateEntity(bulletList[key]);
+            bulletList[key].timer++;
+
+            if(bulletList[key].timer % 75 === 0){
+            	delete bulletList[key];
+            	continue;
+            }
+
+            for(let enemyIndex in enemyList) {
+				var colliding = testCollisionEntity(bulletList[key],enemyList[enemyIndex]);
+				if(colliding){
+					delete bulletList[key];
+					delete enemyList[enemyIndex];
+					break;
+				}
+            }
         }
 
 		for(var upgradeIndex in upgradeList){ 
 			updateEntity(upgradeList[upgradeIndex]);
 			var isColliding = testCollisionEntity(player,upgradeList[upgradeIndex]);
             if(isColliding){
-                score += 1000;
+            	if(upgradeList[upgradeIndex].category === 'score'){
+            		score += 1000;
+            	}
+
+            	if(upgradeList[upgradeIndex].category === 'atkSpd'){
+					player.atkSpd += 1;
+            	}
+                
                 delete upgradeList[upgradeIndex];
             }
 		}
@@ -228,7 +260,6 @@
 		for(var enemyIndex in enemyList){
 			// console.log(key);
 			updateEntity(enemyList[enemyIndex]);
-
 			var colliding = testCollisionEntity(player,enemyList[enemyIndex]);
 			if(colliding){
 				player.hp -= 1;
