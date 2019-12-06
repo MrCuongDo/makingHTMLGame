@@ -32,7 +32,12 @@
 		name:'P',
 		color: "green",
 		hp: 20,
-		atkSpd : 1
+		atkSpd : 1,
+		attackCounter : 0,
+		pressingUp: false,
+		pressingDown: false,
+		pressingLeft: false,
+		presssingRight: false,
 	}
 
 	let enemyList = {};
@@ -75,21 +80,6 @@
 			&& rect2.y <= rect1.y + rect1.width
 	}
 
-	document.onmousemove = function (mouse){
-		var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
-		var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
-
-		if(mouseX < player.width/2) mouseX=player.width/2;
-		if(mouseY < player.height/2) mouseY=player.height/2;
-
-		if(mouseX > WIDTH - player.width/2) mouseX=WIDTH - player.width/2;
-		if(mouseY > HEIGHT - player.height/2) mouseY=HEIGHT - player.height/2;
-
-		player.x = mouseX;
-		player.y = mouseY;
-	}
-
-	
 	updateEntity = function (something){
 		updateEntityPosition(something);
 		drawEntity(something);
@@ -209,6 +199,70 @@
         Bullet(id,x,y,spdX,spdY,width,height);
 	}
 
+	document.onmousemove = function (mouse){
+		// var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+		// var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+
+		// if(mouseX < player.width/2) mouseX=player.width/2;
+		// if(mouseY < player.height/2) mouseY=player.height/2;
+
+		// if(mouseX > WIDTH - player.width/2) mouseX=WIDTH - player.width/2;
+		// if(mouseY > HEIGHT - player.height/2) mouseY=HEIGHT - player.height/2;
+
+		// player.x = mouseX;
+		// player.y = mouseY;
+	}
+
+	document.onclick = function(mouse){
+		if(player.attackCounter > 25) {
+			randomlyGenerateBullet();
+			player.attackCounter = 0;
+		}
+	};
+
+	document.onkeydown = function(event){
+        if(event.keyCode === 68)        //d
+                player.pressingRight = true;
+        else if(event.keyCode === 83)   //s
+                player.pressingDown = true;
+        else if(event.keyCode === 65) //a
+                player.pressingLeft = true;
+        else if(event.keyCode === 87) // w
+                player.pressingUp = true;
+	}
+	 
+	document.onkeyup = function(event){
+        if(event.keyCode === 68)        //d
+                player.pressingRight = false;
+        else if(event.keyCode === 83)   //s
+                player.pressingDown = false;
+        else if(event.keyCode === 65) //a
+                player.pressingLeft = false;
+        else if(event.keyCode === 87) // w
+                player.pressingUp = false;
+	}
+
+	updatePlayerPosition = function(){
+        if(player.pressingRight)
+            player.x += 10;
+        if(player.pressingLeft)
+            player.x -= 10;
+        if(player.pressingDown)
+            player.y += 10;
+        if(player.pressingUp)
+            player.y -= 10;
+       
+        //ispositionvalid
+        if(player.x < player.width/2)
+            player.x = player.width/2;
+        if(player.x > WIDTH-player.width/2)
+            player.x = WIDTH - player.width/2;
+        if(player.y < player.height/2)
+            player.y = player.height/2;
+        if(player.y > HEIGHT - player.height/2)
+            player.y = HEIGHT - player.height/2;
+	}
+
 	update = function (){
 		ctx.clearRect(0,0,WIDTH,HEIGHT); // xoa het noi dung trong canvas truoc khi ve lai
 		frameCount++;
@@ -219,8 +273,7 @@
 		if(frameCount % 75 === 0)
 			randomlyGenerateUpgrade();
 
-		if(frameCount % Math.round(25/player.atkSpd) === 0)
-			randomlyGenerateBullet();
+		player.attackCounter += player.atkSpd;
 
  		for(let key in bulletList){
             updateEntity(bulletList[key]);
@@ -250,7 +303,7 @@
             	}
 
             	if(upgradeList[upgradeIndex].category === 'atkSpd'){
-					player.atkSpd += 1;
+					player.atkSpd += 3;
             	}
                 
                 delete upgradeList[upgradeIndex];
@@ -266,12 +319,14 @@
 				
 			}
 		}
+
 		if(player.hp <= 0) {
 			let timeSurvived = Date.now() - timeWhenGameStarted;
 			console.log(`you lost! You servived for ${timeSurvived} ms!`);
 			startNewGame();
 		}
 
+		updatePlayerPosition(player);
 		drawEntity(player);
 		ctx.fillText(`${player.hp} hp `,0,30);
 		ctx.fillText(`Score: ${score} `,300,30);
