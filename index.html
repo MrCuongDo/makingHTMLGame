@@ -17,37 +17,86 @@
 	var WIDTH = 500;
 
 	var message = 'Bouncing';
-	
+
 	// player
-	var x = 50;
-	var y = 40; 
-	var spdX = 30;
-	var spdY = 5;
-	var name = 'P';
+	var player = {
+		x: 50,
+		spdX: 40,
+		y: 30, 
+		spdY: 5,
+		name:'P'
+	}
 
+	var enemyList = {}
+
+	// enemy_
+	var enemy = {
+		x:150,
+		spdX : 10,
+		y: 350, 
+		spdY: 15,
+		name: 'E'
+	}
+
+	enemyList.E1 = enemy;
 	
+	// enemy2
+	var enemy2 = {
+		x:250,
+		spdX : 30,
+		y: 150, 
+		spdY: 25,
+		name: 'E',
+		id: 'E2'
+	}
 
-	ctx.fillText(name,x,y);
+	enemyList.E2 = enemy2;
 
-	update();
+	// enemy3
+	var enemy3 = {
+		x:170,
+		spdX : 15,
+		y: 150, 
+		spdY: 32,
+		name: 'E',
+		id: 'E3'
+	}
+
+	enemyList.E3 = enemy3;
+
 
 	setInterval(update, 40);
 
-	function update(){
-		x += spdX;
-		y += spdY;
-		ctx.fillText(name,x,y);
+	function updateEntity(something){
+		//enemy
+		something.x += something.spdX;
+		something.y += something.spdY;
+		ctx.fillText(something.name,something.x,something.y);
 		// console.log('hello', x)
 
-		if(x < 0 || x > WIDTH) {
+		if(something.x < 0 || something.x > WIDTH) {
 			console.log(message);
-			spdX = -spdX;
+			something.spdX = -something.spdX;
 		}
 
-		if(y < 0 || y > HEIGHT) {
+		if(something.y < 0 || something.y > HEIGHT) {
 			console.log(message);
-			spdY = -spdY
+			something.spdY = -something.spdY
 		}
+	}
+
+	console.log(enemyList);
+
+	function update(){
+		ctx.clearRect(0,0,WIDTH,HEIGHT); // xoa het noi dung trong canvas truoc khi ve lai
+		updateEntity(player);
+
+		for(var enemyIndex in enemyList){
+			// console.log(key);
+			updateEntity(enemyList[enemyIndex]);
+		}
+		
+		// updateEntity(enemyList.E2);
 	}
 	
 </script>
