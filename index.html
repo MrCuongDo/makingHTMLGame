@@ -38,6 +38,7 @@
 		pressingDown: false,
 		pressingLeft: false,
 		presssingRight: false,
+		aimAngle: 0,
 	}
 
 	let enemyList = {};
@@ -115,7 +116,8 @@
 			height: height,
 			name: "E" ,
 			color: "red",
-			id: id
+			id: id,
+			aimAngle: 0
 		}
 
 		enemyList[id] = enemy;
@@ -185,39 +187,56 @@
         bulletList[id] = asd;
 	}
 	 
-	randomlyGenerateBullet = function(){
+	randomlyGenerateBullet = function(actor,overwriteAngle){
         //Math.random() returns a number between 0 and 1
-        var x = player.x;
-        var y = player.y;
+        var x = actor.x;
+        var y = actor.y;
         var height = 10;
         var width = 10;
         var id = Math.random();
        
-        var angle = Math.random()*360;
+        var angle = actor.aimAngle;
+        if(overwriteAngle !== undefined){
+        	angle = overwriteAngle;
+        }
         var spdX = Math.cos(angle/180*Math.PI)*5;
         var spdY = Math.sin(angle/180*Math.PI)*5;
         Bullet(id,x,y,spdX,spdY,width,height);
 	}
 
 	document.onmousemove = function (mouse){
-		// var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
-		// var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+		var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+		var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
 
-		// if(mouseX < player.width/2) mouseX=player.width/2;
-		// if(mouseY < player.height/2) mouseY=player.height/2;
+		mouseX -= player.x;
+		mouseY -= player.y;
 
-		// if(mouseX > WIDTH - player.width/2) mouseX=WIDTH - player.width/2;
-		// if(mouseY > HEIGHT - player.height/2) mouseY=HEIGHT - player.height/2;
-
-		// player.x = mouseX;
-		// player.y = mouseY;
+		player.aimAngle = Math.atan2(mouseY,mouseX) / Math.PI * 180;
 	}
 
-	document.onclick = function(mouse){
+	document.onclick = function(mouse){ // left click
 		if(player.attackCounter > 25) {
-			randomlyGenerateBullet();
+			randomlyGenerateBullet(player);
 			player.attackCounter = 0;
 		}
+	};
+
+	document.oncontextmenu = function(mouse){ // right click
+		
+		
+		if(player.attackCounter > 100) {
+			for(var angle = 0; angle < 360; angle++){
+				randomlyGenerateBullet(player,angle);
+			}
+			player.attackCounter = 0;
+		}else if(player.attackCounter > 75) {
+			randomlyGenerateBullet(player,player.aimAngle -5);
+			randomlyGenerateBullet(player);
+			randomlyGenerateBullet(player,player.aimAngle +5);
+			player.attackCounter = 0;
+		}
+
+		mouse.preventDefault();
 	};
 
 	document.onkeydown = function(event){
@@ -303,7 +322,7 @@
             	}
 
             	if(upgradeList[upgradeIndex].category === 'atkSpd'){
-					player.atkSpd += 3;
+					player.atkSpd += 1;
             	}
                 
                 delete upgradeList[upgradeIndex];
