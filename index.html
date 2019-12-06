@@ -13,90 +13,107 @@
 	// ctx.fillRect(50,50,100,100); // draw rectangle .. ctx.fillRect(startX, startY, width, height)
 	// ctx.clearRect(75,75,100,100); // clear canvas ... ctx.fillRect(startX, startY, width, height)
 
-	var HEIGHT = 500;
-	var WIDTH = 500;
+	const HEIGHT = 500;
+	const WIDTH = 500;
+	const DISTANCE_COLLIDING= 30;
+	let timeWhenGameStarted = Date.now();
 
 	var message = 'Bouncing';
 
 	// player
-	var player = {
+	let player = {
 		x: 50,
 		spdX: 40,
 		y: 30, 
 		spdY: 5,
-		name:'P'
+		name:'P',
+		hp: 20
 	}
 
-	var enemyList = {}
+	let enemyList = {}
 
-	// enemy_
-	var enemy = {
-		x:150,
-		spdX : 10,
-		y: 350, 
-		spdY: 15,
-		name: 'E'
+	//FUNCTION DECLARATION
+	getDistanceBetweenEntity = function (entity1, entity2) { // return distance (number)
+		let vx=entity1.x -entity2.x;
+		let vy = entity1.y - entity2.y;
+		return Math.sqrt(vx*vx + vy*vy);
 	}
 
-	enemyList.E1 = enemy;
+	testCollisionEntity = function (entity1, entity2){ // return if colliding (true/false)
+		let distance = getDistanceBetweenEntity(entity1,entity2);
+		return distance < DISTANCE_COLLIDING; // return true neu distance nho hon 10
+	}
+
+	enemy = function (id, x, y, spdX, spdY) {
+		let enemy = {
+			x: x,
+			spdX: spdX,
+			y:y, 
+			spdY: spdY,
+			name: "E" ,
+			id: id
+		}
+
+		enemyList[id] = enemy;
+	}
+
+	document.onmousemove = function (mouse){
+		var mouseX = mouse.clientX;
+		var mouseY = mouse.clientY;
+
+		player.x = mouseX;
+		player.y = mouseY;
+	}
+
 	
-	// enemy2
-	var enemy2 = {
-		x:250,
-		spdX : 30,
-		y: 150, 
-		spdY: 25,
-		name: 'E',
-		id: 'E2'
+	updateEntity = function (something){
+		updateEntityPosition(something);
+		drawEntity(something);
 	}
 
-	enemyList.E2 = enemy2;
-
-	// enemy3
-	var enemy3 = {
-		x:170,
-		spdX : 15,
-		y: 150, 
-		spdY: 32,
-		name: 'E',
-		id: 'E3'
-	}
-
-	enemyList.E3 = enemy3;
-
-
-	setInterval(update, 40);
-
-	function updateEntity(something){
-		//enemy
+	updateEntityPosition = function(something){
 		something.x += something.spdX;
 		something.y += something.spdY;
-		ctx.fillText(something.name,something.x,something.y);
-		// console.log('hello', x)
 
 		if(something.x < 0 || something.x > WIDTH) {
-			console.log(message);
 			something.spdX = -something.spdX;
 		}
 
 		if(something.y < 0 || something.y > HEIGHT) {
-			console.log(message);
 			something.spdY = -something.spdY
 		}
 	}
 
-	console.log(enemyList);
+	drawEntity = function (something){
+		ctx.fillText(something.name,something.x,something.y);
+	}
 
-	function update(){
+	update = function (){
 		ctx.clearRect(0,0,WIDTH,HEIGHT); // xoa het noi dung trong canvas truoc khi ve lai
-		updateEntity(player);
 
 		for(var enemyIndex in enemyList){
 			// console.log(key);
 			updateEntity(enemyList[enemyIndex]);
+
+			var colliding = testCollisionEntity(player,enemyList[enemyIndex]);
+			if(colliding){
+				player.hp -= 1;
+				if(player.hp <= 0) {
+					let timeSurvived = Date.now() - timeWhenGameStarted;
+					console.log(`you lost! You servived for ${timeSurvived} ms!`);
+					timeWhenGameStarted = Date.now();
+					player.hp = 10;
+				}
+			}
 		}
-		
-		// updateEntity(enemyList.E2);
+
+		drawEntity(player);
+		ctx.fillText(`${player.hp} hp `,0,30);
 	}
+
+	enemy('E1', 150, 350, 10, 15);
+	enemy('E2', 250, 150, 30, 25);
+	enemy('E3', 170, 150, 15, 32);
 	
+	setInterval(update, 80);
 </script>
