@@ -15,48 +15,44 @@
 			width: width,
 			height: height,
 			img: img
-		}
+		};
 
 		self.update = function (){
 			self.updatePosition();
 			self.draw();
 		}
-
-		self.updatePosition = function(){
-			self.x += self.spdX;
-			self.y += self.spdY;
-
-			if(self.x < 0 || self.x > WIDTH) {
-				self.spdX = -self.spdX;
-			}
-
-			if(self.y < 0 || self.y > HEIGHT) {
-				self.spdY = -self.spdY
-			}
-		}
-
 		self.draw = function (){
 			ctx.save();
-			let x = self.x-self.width / 2;
-			let y = self.y - self.height / 2;
+
+			// var x = self.x-self.width/2;
+			// var y = self.y-self.height/2;
+
+			// calculate distance between objects and player (can be player itself)
+			let x = self.x - player.x;
+			let y = self.y - player.y;
+
+			// offset to middle of canvas 
+			x += WIDTH/2; 
+			y += HEIGHT/2;			
+
+			// offset to center of object 
+			x -= self.width/2;
+			y -= self.height/2;
+
 			// ctx.drawImage(img,x,y);
 			ctx.drawImage(self.img,
 				0, 0, self.img.width, self.img.height,//cropStartX, cropStartY, cropWidth, cropHeight
 				x, y, self.width, self.height//drawX, drawY, drawWidth, drawHeight
 			);
+
 			ctx.restore();
 		}
-
 		self.getDistance= function ( entity2) { // return distance (number)
 			let vx=self.x -entity2.x;
 			let vy = self.y - entity2.y;
 			return Math.sqrt(vx*vx + vy*vy);
 		}
 
-		// testCollision = function (self, entity2){ // return if colliding (true/false)
-		// 	let distance = getDistanceBetweenEntity(entity1,entity2);
-		// 	return distance < DISTANCE_COLLIDING; // return true neu distance nho hon 10
-		// }
 		self.testCollision = function (entity2){ // return if colliding (true/false)
 			let rect1 = {
 				x: self.x - self.width / 2,
@@ -74,7 +70,60 @@
 			return testCollisionRectRect(rect1,rect2);
 		}
 
-		self.update();
+		self.updatePosition = function(){
+			self.x += self.spdX;
+			self.y += self.spdY;
+
+			if(self.x < 0 || self.x > WIDTH) {
+				self.spdX = -self.spdX;
+			}
+
+			if(self.y < 0 || self.y > HEIGHT) {
+				self.spdY = -self.spdY
+			}
+		}
+		return self;
+	}
+
+	Player = function() {
+		let self = Actor('player','myId',50,30,40,5,50,70,Img.player,20,1);
+		//
+		self.updatePosition = function () {
+			if(self.pressingRight)
+            	self.x += 10;
+	        if(self.pressingLeft)
+	            self.x -= 10;
+	        if(self.pressingDown)
+	            self.y += 10;
+	        if(self.pressingUp)
+	            self.y -= 10;
+	       
+	        //ispositionvalid
+	        if(self.x < self.width/2)
+	            self.x = self.width/2; 
+	        if(self.x > WIDTH-self.width/2)
+	            self.x = WIDTH - self.width/2;
+	        if(self.y < self.height/2)
+	            self.y = self.height/2;
+	        if(self.y > HEIGHT - self.height/2)
+	            self.y = HEIGHT - self.height/2;
+		}
+
+		let super_update = self.update;
+		self.update = function() {
+			super_update();
+			if(self.hp <= 0) {
+				let timeSurvived = Date.now() - timeWhenGameStarted;
+				console.log(`you lost! You servived for ${timeSurvived} ms with score: ${score}!`);
+				startNewGame();
+			}
+		}
+		//
+		self.pressingUp= false;
+		self.pressingDown= false;
+		self.pressingLeft= false;
+		self.presssingRight= false;
+		
 		return self;
 	}
 
@@ -110,48 +159,6 @@
 				generateBullet(self,self.aimAngle +5);
 			}
 		}
-		return self;
-	}
-
-	Player = function() {
-		let self = Actor('player','myId',50,30,40,5,50,70,Img.player,20,1);
-		//
-		self.updatePosition = function () {
-			if(self.pressingRight)
-            	self.x += 10;
-	        if(self.pressingLeft)
-	            self.x -= 10;
-	        if(self.pressingDown)
-	            self.y += 10;
-	        if(self.pressingUp)
-	            self.y -= 10;
-	       
-	        //ispositionvalid
-	        if(self.x < self.width/2)
-	            self.x = self.width/2;
-	        if(self.x > WIDTH-self.width/2)
-	            self.x = WIDTH - self.width/2;
-	        if(self.y < self.height/2)
-	            self.y = self.height/2;
-	        if(self.y > HEIGHT - self.height/2)
-	            self.y = HEIGHT - self.height/2;
-		}
-
-		let super_update = self.update;
-		self.update = function() {
-			super_update();
-			if(self.hp <= 0) {
-				let timeSurvived = Date.now() - timeWhenGameStarted;
-				console.log(`you lost! You servived for ${timeSurvived} ms with score: ${score}!`);
-				startNewGame();
-			}
-		}
-		//
-		self.pressingUp= false;
-		self.pressingDown= false;
-		self.pressingLeft= false;
-		self.presssingRight= false;
-		
 		return self;
 	}
 
