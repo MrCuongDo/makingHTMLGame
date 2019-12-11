@@ -19,13 +19,16 @@
 	let frameCount = 0;
 	let score = 0;
 	let currentMap;
+	let pauseGame = false;
 
 	//step 1: loading the image (in the memory) ONCE
 	let Img = {};
 	Img.player = new Image();
 	Img.player.src = "img/player.png";
-	Img.enemy = new Image();
-	Img.enemy.src = 'img/enemy.png';
+	Img.bat = new Image();
+	Img.bat.src = 'img/bat.png';
+	Img.bee = new Image();
+	Img.bee.src = 'img/bee.png';
 	Img.bullet = new Image();
 	Img.bullet.src = 'img/bullet.png';
 	Img.upgrade1 = new Image();
@@ -61,13 +64,16 @@
 	// Keyboard movement
 	document.onkeydown = function(event){
         if(event.keyCode === 68)        //d
-                player.pressingRight = true;
+            player.pressingRight = true;
         else if(event.keyCode === 83)   //s
-                player.pressingDown = true;
+            player.pressingDown = true;
         else if(event.keyCode === 65) //a
-                player.pressingLeft = true;
+            player.pressingLeft = true;
         else if(event.keyCode === 87) // w
-                player.pressingUp = true;
+            player.pressingUp = true;
+
+        else if (event.keyCode === 80) //p
+        	pauseGame = !pauseGame;
 	}
 	 
 	document.onkeyup = function(event){
@@ -83,6 +89,11 @@
 
 	// main application
 	update = function (){
+		if (pauseGame) {
+			ctx.fillText('PAUSE', WIDTH/2 - 50, HEIGHT/2 - 100);
+			return;
+		}
+
 		ctx.clearRect(0,0,WIDTH,HEIGHT); // xoa het noi dung trong canvas truoc khi ve lai
 		currentMap.draw();
 		frameCount++;

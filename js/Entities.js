@@ -101,11 +101,13 @@
 		let super_update = self.update;
 		self.update = function() {
 			super_update();
-			if(self.hp <= 0) {
-				let timeSurvived = Date.now() - timeWhenGameStarted;
+
+		}
+
+		self.onDeath =  function () {
+			let timeSurvived = Date.now() - timeWhenGameStarted;
 				console.log(`you lost! You servived for ${timeSurvived} ms with score: ${score}!`);
 				startNewGame();
-			}
 		}
 		//
 		self.pressingUp= false;
@@ -128,7 +130,13 @@
 		self.update = function() {
 			super_update();
 			self.attackCounter += self.atkSpd;
+
+			if(self.hp <= 0) {
+				self.onDeath();
+			}
 		}
+
+		self.onDeath = function() {}
 
 		self.performAttack = function (){
 			if(self.attackCounter > 25) {
@@ -151,8 +159,8 @@
 		return self;
 	}
 
-	Enemy = function (id, x, y,width,height) {
-		let self = Actor('enemy',id,x,y,width,height,Img.enemy,10,1); 
+	Enemy = function (id, x, y,width,height,img, hp, atkSpd) {
+		let self = Actor('enemy',id,x,y,width,height,img,hp,atkSpd); 
 
 		let super_update = self.update;
 		self.update = function() {
@@ -165,6 +173,11 @@
 			// 	player.hp -= 1;
 			// }
 		}	
+
+		self.onDeath =  function () {
+			console.log(`You kill ${self.id}!`);
+			delete enemyList[self.id];
+		}
 
 		self.updateAim = function() {
 			let diffX = player.x - self.x;
@@ -194,7 +207,12 @@
         var height = 64;
         var width = 64;
         var id = Math.random();
-        Enemy(id,x,y,width,height);  
+        if(Math.random() < 0.5) {
+			Enemy(id,x,y,width,height,Img.bat, 2, 1);
+        }else {
+        	Enemy(id,x,y,width,height,Img.bee, 1, 3);	
+        }
+          
 	}
 
 	Upgrade = function (id, x, y,width,height,category, img) {
@@ -257,15 +275,9 @@
 
             if(self.combatType === 'player') {// bullet was shoot by player
             	for(let enemyIndex in enemyList) {
-				/*var colliding = bulletList[key].testCollision(enemyList[enemyIndex]);
-				if(colliding){
-					delete bulletList[key];
-					delete enemyList[enemyIndex];
-					break;
-				}*/
 					if(self.testCollision(enemyList[enemyIndex])){
 						toRemove = true;
-						delete enemyList[enemyIndex];
+						enemyList[enemyIndex].hp -= 1;
 						break;
 					}
 					
