@@ -74,11 +74,11 @@
 			self.x += self.spdX;
 			self.y += self.spdY;
 
-			if(self.x < 0 || self.x > WIDTH) {
+			if(self.x < 0 || self.x > currentMap.width) {
 				self.spdX = -self.spdX;
 			}
 
-			if(self.y < 0 || self.y > HEIGHT) {
+			if(self.y < 0 || self.y > currentMap.height) {
 				self.spdY = -self.spdY
 			}
 		}
@@ -101,12 +101,12 @@
 	        //ispositionvalid
 	        if(self.x < self.width/2)
 	            self.x = self.width/2; 
-	        if(self.x > WIDTH-self.width/2)
-	            self.x = WIDTH - self.width/2;
+	        if(self.x > currentMap.width-self.width/2)
+	            self.x = currentMap.width - self.width/2;
 	        if(self.y < self.height/2)
 	            self.y = self.height/2;
-	        if(self.y > HEIGHT - self.height/2)
-	            self.y = HEIGHT - self.height/2;
+	        if(self.y > currentMap.height - self.height/2)
+	            self.y = currentMap.height - self.height/2;
 		}
 
 		let super_update = self.update;
@@ -171,18 +171,18 @@
 
 			self.performAttack();
 
-			var colliding = player.testCollision(self);
-			if(colliding){
-				player.hp -= 1;
-			}
+			// var colliding = player.testCollision(self);
+			// if(colliding){
+			// 	player.hp -= 1;
+			// }
 		}	
 		enemyList[id] = self;
 	}
 
 	randomlyGenerateEnemy = function(){
         //Math.random() returns a number between 0 and 1
-        var x = Math.random()*WIDTH;
-        var y = Math.random()*HEIGHT;
+        var x = Math.random()*currentMap.width;
+        var y = Math.random()*currentMap.height;
         var height = 64;
         var width = 64;
         var id = Math.random();
@@ -217,8 +217,8 @@
 
 	randomlyGenerateUpgrade = function(){
         //Math.random() returns a number between 0 and 1
-        var x = Math.random()*WIDTH;
-        var y = Math.random()*HEIGHT;
+        var x = Math.random()*currentMap.width;
+        var y = Math.random()*currentMap.height;
         var height = 32;
         var width = 32;
         var id = Math.random();
@@ -234,9 +234,10 @@
         Upgrade(id,x,y,spdX,spdY,width,height,category,img);  
 	}
 
-	Bullet = function (id,x,y,spdX,spdY,width,height){
+	Bullet = function (id,x,y,spdX,spdY,width,height,combatType){
 		let self = Entity('bullet',id,x,y,spdX,spdY,width,height,Img.bullet); 
         self.timer=0;
+        self.combatType = combatType;
 
         let super_update = self.update;
         self.update = function (){
@@ -248,18 +249,32 @@
             	toRemove = true;
             }
 
-            for(let enemyIndex in enemyList) {
+            if(self.combatType === 'player') {// bullet was shoot by player
+            	for(let enemyIndex in enemyList) {
 				/*var colliding = bulletList[key].testCollision(enemyList[enemyIndex]);
 				if(colliding){
 					delete bulletList[key];
 					delete enemyList[enemyIndex];
 					break;
 				}*/
+					if(self.testCollision(enemyList[enemyIndex])){
+						toRemove = true;
+						delete enemyList[enemyIndex];
+						break;
+					}
+					
+	            }
+            }else if (self.combatType === 'enemy') {
+            	if(self.testCollision(player)) {
+            		toRemove = true;
+            		player.hp -= 1;
+            	}
             }
 
             if(toRemove) {
             	delete bulletList[self.id];
-            }
+        	}
+            
         }
         bulletList[id] = self;
 	}
@@ -278,7 +293,7 @@
         }
         var spdX = Math.cos(angle/180*Math.PI)*5;
         var spdY = Math.sin(angle/180*Math.PI)*5;
-        Bullet(id,x,y,spdX,spdY,width,height);
+        Bullet(id,x,y,spdX,spdY,width,height,actor.type);
 	}
 
 	testCollisionRectRect =  function (rect1, rect2){
