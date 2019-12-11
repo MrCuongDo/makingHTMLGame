@@ -4,14 +4,12 @@
 	let upgradeList = {};
 	let bulletList = {};
 
-	Entity = function(type,id, x, y, spdX, spdY,width,height, img) {
+	Entity = function(type,id, x, y,width,height, img) {
 		let self = {
 			type:type,
 			id: id,
 			x: x,
-			spdX: spdX,
 			y: y, 
-			spdY: spdY,
 			width: width,
 			height: height,
 			img: img
@@ -21,6 +19,9 @@
 			self.updatePosition();
 			self.draw();
 		}
+
+		self.updatePosition = function () {};
+
 		self.draw = function (){
 			ctx.save();
 
@@ -70,23 +71,11 @@
 			return testCollisionRectRect(rect1,rect2);
 		}
 
-		self.updatePosition = function(){
-			self.x += self.spdX;
-			self.y += self.spdY;
-
-			if(self.x < 0 || self.x > currentMap.width) {
-				self.spdX = -self.spdX;
-			}
-
-			if(self.y < 0 || self.y > currentMap.height) {
-				self.spdY = -self.spdY
-			}
-		}
 		return self;
 	}
 
 	Player = function() {
-		let self = Actor('player','myId',50,30,40,5,50,70,Img.player,20,1);
+		let self = Actor('player','myId',50,30,50,70,Img.player,20,1);
 		//
 		self.updatePosition = function () {
 			if(self.pressingRight)
@@ -127,8 +116,8 @@
 		return self;
 	}
 
-	Actor = function(type,id, x, y, spdX, spdY,width,height,img,hp,atkSpd){
-		let self = Entity(type,id,x,y,spdX,spdY,width,height,img); 
+	Actor = function(type,id, x, y,width,height,img,hp,atkSpd){
+		let self = Entity(type,id,x,y,width,height,img); 
 		//
 		self.hp= hp;
 		self.atkSpd= atkSpd;
@@ -162,13 +151,13 @@
 		return self;
 	}
 
-	Enemy = function (id, x, y, spdX, spdY,width,height) {
-		let self = Actor('enemy',id,x,y,spdX,spdY,width,height,Img.enemy,10,1); 
+	Enemy = function (id, x, y,width,height) {
+		let self = Actor('enemy',id,x,y,width,height,Img.enemy,10,1); 
 
 		let super_update = self.update;
 		self.update = function() {
 			super_update();
-
+			self.updateAim();
 			self.performAttack();
 
 			// var colliding = player.testCollision(self);
@@ -176,6 +165,25 @@
 			// 	player.hp -= 1;
 			// }
 		}	
+
+		self.updateAim = function() {
+			let diffX = player.x - self.x;
+			let diffY = player.y - self.y;
+
+			self.aimAngle = Math.atan2(diffY,diffX) / Math.PI * 180; 
+		}
+
+		self.updatePosition = function () {
+			let diffX = player.x - self.x;
+			let diffY = player.y - self.y;
+
+			if(diffX > 0) self.x += 3;
+			else self.x -= 3; 
+
+			if(diffY > 0) self.y += 3;
+			else self.y -= 3;
+
+		}
 		enemyList[id] = self;
 	}
 
@@ -186,13 +194,11 @@
         var height = 64;
         var width = 64;
         var id = Math.random();
-        var spdX = 5 + Math.random() * 5;
-        var spdY = 5 + Math.random() * 5;
-        Enemy(id,x,y,spdX,spdY,width,height);  
+        Enemy(id,x,y,width,height);  
 	}
 
-	Upgrade = function (id, x, y, spdX, spdY,width,height,category, img) {
-		let self = Entity('upgrade',id,x,y,spdX,spdY,width,height,img); 
+	Upgrade = function (id, x, y,width,height,category, img) {
+		let self = Entity('upgrade',id,x,y,width,height,img); 
 		self.category= category
 
 		let super_update = self.update;
@@ -222,8 +228,6 @@
         var height = 32;
         var width = 32;
         var id = Math.random();
-        var spdX = 0;
-        var spdY = 0;
         if (Math.random() < 0.5) {
         	var category = 'score';
         	var img = Img.upgrade1;	
@@ -231,13 +235,15 @@
 			var category = 'atkSpd';
         	var img = Img.upgrade2;	
         }
-        Upgrade(id,x,y,spdX,spdY,width,height,category,img);  
+        Upgrade(id,x,y,width,height,category,img);  
 	}
 
 	Bullet = function (id,x,y,spdX,spdY,width,height,combatType){
-		let self = Entity('bullet',id,x,y,spdX,spdY,width,height,Img.bullet); 
+		let self = Entity('bullet',id,x,y,width,height,Img.bullet); 
         self.timer=0;
         self.combatType = combatType;
+        self.spdX = spdX;
+        self.spdY = spdY;
 
         let super_update = self.update;
         self.update = function (){
@@ -276,6 +282,20 @@
         	}
             
         }
+
+		self.updatePosition = function(){
+			self.x += self.spdX;
+			self.y += self.spdY;
+
+			if(self.x < 0 || self.x > currentMap.width) {
+				self.spdX = -self.spdX;
+			}
+
+			if(self.y < 0 || self.y > currentMap.height) {
+				self.spdY = -self.spdY
+			}
+		}
+
         bulletList[id] = self;
 	}
 	 
