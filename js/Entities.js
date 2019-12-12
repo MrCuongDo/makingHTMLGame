@@ -1,8 +1,5 @@
 
 	let player;
-	let enemyList = {};
-	let upgradeList = {};
-	let bulletList = {};
 
 	Entity = function(type,id, x, y,width,height, img) {
 		let self = {
@@ -76,7 +73,18 @@
 
 	Player = function() {
 		let self = Actor('player','myId',50,30,50,70,Img.player,20,1);
-		//
+
+		let super_update = self.update;
+		self.update = function() {
+			super_update();
+			if(self.pressingMouseLeft) {
+				self.performAttack();
+			} 
+			if(self.pressingMouseRight) {
+				self.performSpecialAttack();
+			}
+		}
+		
 		self.updatePosition = function () {
 			if(self.pressingRight)
             	self.x += 10;
@@ -98,12 +106,6 @@
 	            self.y = currentMap.height - self.height/2;
 		}
 
-		let super_update = self.update;
-		self.update = function() {
-			super_update();
-
-		}
-
 		self.onDeath =  function () {
 			let timeSurvived = Date.now() - timeWhenGameStarted;
 				console.log(`you lost! You servived for ${timeSurvived} ms with score: ${score}!`);
@@ -113,7 +115,10 @@
 		self.pressingUp= false;
 		self.pressingDown= false;
 		self.pressingLeft= false;
-		self.presssingRight= false;
+		self.pressingRight= false;
+
+		self.pressingMouseLeft= false;
+		self.pressingMouseRight= false;
 		
 		return self;
 	}
@@ -122,6 +127,7 @@
 		let self = Entity(type,id,x,y,width,height,img); 
 		//
 		self.hp= hp;
+		self.hpMax= hp;
 		self.atkSpd= atkSpd;
 		self.aimAngle= 0;
 		self.attackCounter= 0;
@@ -141,24 +147,25 @@
 		self.performAttack = function (){
 			if(self.attackCounter > 25) {
 				self.attackCounter = 0;
-				generateBullet(self);
+				Bullet.generate(self);
 			}
 		}
 
 		self.performSpecialAttack = function () {
 			//for(var angle = 0; angle < 360; angle++){
-			// 		generateBullet(actor,angle);
+			// 		Bullet.generate(actor,angle);
 			// 	}
 			if(self.attackCounter > 75) {
 				self.attackCounter = 0;
-				generateBullet(self,self.aimAngle -5);
-				generateBullet(self);
-				generateBullet(self,self.aimAngle +5);
+				Bullet.generate(self,self.aimAngle -5);
+				Bullet.generate(self);
+				Bullet.generate(self,self.aimAngle +5);
 			}
 		}
 		return self;
 	}
 
+	//##########################
 	Enemy = function (id, x, y,width,height,img, hp, atkSpd) {
 		let self = Actor('enemy',id,x,y,width,height,img,hp,atkSpd); 
 
@@ -174,9 +181,43 @@
 			// }
 		}	
 
+		let super_draw = self.draw;
+		self.draw = function () {
+			super_draw();
+			// calculate distance between objects and player (can be player itself)
+			// let x = self.x - player.x;
+			// let y = self.y - player.y;
+
+			// offset to middle of canvas 
+			// x += WIDTH/2; 
+			// y += HEIGHT/2;			
+
+			// // offset to center of object 
+			// x -= self.width/2;
+			// y -= self.height/2;
+
+			let x = self.x - player.x + WIDTH/2;
+			let y = self.y - player.y + HEIGHT/2 - self.height/2 - 20 ;
+
+			ctx.save();
+			ctx.fillStyle = 'red';
+			let hpBarLength = 50;
+			let width = hpBarLength * self.hp / self.hpMax;
+			if(width < 0) {
+				width = 0;
+			}
+
+			ctx.fillRect (x- hpBarLength / 2, y, width,10); // draw hp bar according to hp
+
+			ctx.strokeStyle = 'black';
+			ctx.strokeRect(x-hpBarLength / 2,y,hpBarLength,10); // draw hp bar that has been lost
+			ctx.restore();
+
+		}
+
 		self.onDeath =  function () {
 			console.log(`You kill ${self.id}!`);
-			delete enemyList[self.id];
+			delete Enemy.List[self.id];
 		}
 
 		self.updateAim = function() {
@@ -197,10 +238,21 @@
 			else self.y -= 3;
 
 		}
-		enemyList[id] = self;
+		Enemy.List[id] = self;
 	}
 
-	randomlyGenerateEnemy = function(){
+	Enemy.List = {}
+
+	Enemy.update= function() {
+		if(frameCount % 100 === 0)
+			Enemy.randomlyGenerate();
+
+		for(var enemyIndex in Enemy.List){
+			Enemy.List[enemyIndex].update();
+		}
+	}
+
+	Enemy.randomlyGenerate = function(){
         //Math.random() returns a number between 0 and 1
         var x = Math.random()*currentMap.width;
         var y = Math.random()*currentMap.height;
@@ -209,12 +261,12 @@
         var id = Math.random();
         if(Math.random() < 0.5) {
 			Enemy(id,x,y,width,height,Img.bat, 2, 1);
-        }else {
+       }else {
         	Enemy(id,x,y,width,height,Img.bee, 1, 3);	
-        }
-          
+        } 
 	}
 
+	//##########################
 	Upgrade = function (id, x, y,width,height,category, img) {
 		let self = Entity('upgrade',id,x,y,width,height,img); 
 		self.category= category
@@ -232,14 +284,24 @@
 					player.atkSpd += 1;
             	}
                 
-                delete upgradeList[self.id];
+                delete Upgrade.List[self.id];
             }
 			
 		}	
-		upgradeList[self.id] = self;
+		Upgrade.List[self.id] = self;
 	}
 
-	randomlyGenerateUpgrade = function(){
+	Upgrade.List = {};
+
+	Upgrade.update = function() {
+		if(frameCount % 75 === 0)
+			Upgrade.randomlyGenerate();
+		for(var upgradeIndex in Upgrade.List){ 
+			Upgrade.List[upgradeIndex].update();
+		}
+	}
+
+	Upgrade.randomlyGenerate= function(){
         //Math.random() returns a number between 0 and 1
         var x = Math.random()*currentMap.width;
         var y = Math.random()*currentMap.height;
@@ -256,44 +318,14 @@
         Upgrade(id,x,y,width,height,category,img);  
 	}
 
+	//##########################
+
 	Bullet = function (id,x,y,spdX,spdY,width,height,combatType){
 		let self = Entity('bullet',id,x,y,width,height,Img.bullet); 
         self.timer=0;
         self.combatType = combatType;
         self.spdX = spdX;
         self.spdY = spdY;
-
-        let super_update = self.update;
-        self.update = function (){
-        	super_update();
-        	self.timer++;
-
-        	let toRemove = false;
-            if(self.timer % 75 === 0){
-            	toRemove = true;
-            }
-
-            if(self.combatType === 'player') {// bullet was shoot by player
-            	for(let enemyIndex in enemyList) {
-					if(self.testCollision(enemyList[enemyIndex])){
-						toRemove = true;
-						enemyList[enemyIndex].hp -= 1;
-						break;
-					}
-					
-	            }
-            }else if (self.combatType === 'enemy') {
-            	if(self.testCollision(player)) {
-            		toRemove = true;
-            		player.hp -= 1;
-            	}
-            }
-
-            if(toRemove) {
-            	delete bulletList[self.id];
-        	}
-            
-        }
 
 		self.updatePosition = function(){
 			self.x += self.spdX;
@@ -308,10 +340,45 @@
 			}
 		}
 
-        bulletList[id] = self;
+        Bullet.List[id] = self;
 	}
-	 
-	generateBullet = function(actor,overwriteAngle){
+
+	Bullet.List = {}
+
+	Bullet.update = function () {
+ 		for(var key in Bullet.List){
+ 			let b = Bullet.List[key];
+ 			b.update();
+
+        	let toRemove = false;
+        	b.timer++;
+            if(b.timer % 75 === 0){
+            	toRemove = true;
+            }
+
+            if(b.combatType === 'player') {// bullet was shoot by player
+            	for(let enemyIndex in Enemy.List) {
+					if(b.testCollision(Enemy.List[enemyIndex])){
+						toRemove = true;
+						Enemy.List[enemyIndex].hp -= 1;
+						break;
+					}
+					
+	            }
+            }else if (b.combatType === 'enemy') {
+            	if(b.testCollision(player)) {
+            		toRemove = true;
+            		player.hp -= 1;
+            	}
+            }
+
+            if(toRemove) {
+            	delete Bullet.List[b.id];
+        	}
+        }
+	} 
+
+	Bullet.generate = function(actor,overwriteAngle){
         //Math.random() returns a number between 0 and 1
         var x = actor.x;
         var y = actor.y;
@@ -326,11 +393,4 @@
         var spdX = Math.cos(angle/180*Math.PI)*5;
         var spdY = Math.sin(angle/180*Math.PI)*5;
         Bullet(id,x,y,spdX,spdY,width,height,actor.type);
-	}
-
-	testCollisionRectRect =  function (rect1, rect2){
-		return rect1.x <= rect2.x + rect2.width
-			&& rect2.x <= rect1.x + rect1.width
-			&& rect1.y <= rect2.y + rect2.width
-			&& rect2.y <= rect1.y + rect1.width
 	}
