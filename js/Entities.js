@@ -45,6 +45,7 @@
 
 			ctx.restore();
 		}
+
 		self.getDistance= function ( entity2) { // return distance (number)
 			let vx=self.x -entity2.x;
 			let vy = self.y - entity2.y;
@@ -131,15 +132,62 @@
 		self.atkSpd= atkSpd;
 		self.aimAngle= 0;
 		self.attackCounter= 0;
+		self.animateCounter = 0;
 
 		let super_update = self.update;
 		self.update = function() {
 			super_update();
 			self.attackCounter += self.atkSpd;
-
+			self.animateCounter += 0.2;
 			if(self.hp <= 0) {
 				self.onDeath();
 			}
+		}
+
+		self.draw = function (){
+			ctx.save();
+
+			// var x = self.x-self.width/2;
+			// var y = self.y-self.height/2;
+
+			// calculate distance between objects and player (can be player itself)
+			let x = self.x - player.x;
+			let y = self.y - player.y;
+
+			// offset to middle of canvas 
+			x += WIDTH/2; 
+			y += HEIGHT/2;			
+
+			// offset to center of object 
+			x -= self.width/2;
+			y -= self.height/2;
+
+			// ctx.drawImage(img,x,y);
+			let frameWidth = self.img.width / 3; // because we have 3 images in 1 row
+			let frameHeight = self.img.height / 4; // because we have 4 images in 1 column
+
+			let directionMod = 3; // look right 
+
+			if(self.aimAngle < 0 ) {
+				self.aimAngle += 360;
+			}
+
+			if(self.aimAngle >= 45 && self.aimAngle < 135) { // look down
+				directionMod = 2;
+			} else if (self.aimAngle >= 135 && self.aimAngle < 225) { // look left
+				directionMod = 1;
+			} else if (self.aimAngle >= 225 && self.aimAngle < 315) { // look up 
+				directionMod = 0;
+			}
+
+			let walkingMod =  Math.floor(self.animateCounter % 3) ; // 0 , 1 or 2
+
+			ctx.drawImage(self.img,
+				frameWidth * walkingMod, frameHeight * directionMod, frameWidth, frameHeight,//cropStartX, cropStartY, cropWidth, cropHeight
+				x, y, self.width, self.height//drawX, drawY, drawWidth, drawHeight
+			);
+
+			ctx.restore();
 		}
 
 		self.onDeath = function() {}
