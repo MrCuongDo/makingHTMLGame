@@ -73,7 +73,7 @@
 	}
 
 	Player = function() {
-		let self = Actor('player','myId',50,30,50,70,Img.player,20,1);
+		let self = Actor('player','myId',50,30,50 * 1.5,70* 1.5,Img.player,20,1);
 
 		let super_update = self.update;
 		self.update = function() {
@@ -87,6 +87,8 @@
 		}
 		
 		self.updatePosition = function () {
+			let oldX = self.x;
+			let oldY = self.y;
 			if(self.pressingRight)
             	self.x += 10;
 	        if(self.pressingLeft)
@@ -99,12 +101,17 @@
 	        //ispositionvalid
 	        if(self.x < self.width/2)
 	            self.x = self.width/2; 
-	        if(self.x > currentMap.width-self.width/2)
-	            self.x = currentMap.width - self.width/2;
+	        if(self.x > Maps.current.width-self.width/2)
+	            self.x = Maps.current.width - self.width/2;
 	        if(self.y < self.height/2)
 	            self.y = self.height/2;
-	        if(self.y > currentMap.height - self.height/2)
-	            self.y = currentMap.height - self.height/2;
+	        if(self.y > Maps.current.height - self.height/2)
+	            self.y = Maps.current.height - self.height/2;
+
+	        if(Maps.current.isPositionWall(self)) {
+	        	self.x = oldX;
+	        	self.y = oldY;
+	        }
 		}
 
 		self.onDeath =  function () {
@@ -285,6 +292,13 @@
 			if(diffY > 0) self.y += 3;
 			else self.y -= 3;
 
+			let oldX = self.x;
+        	let oldY = self.y;
+			if(Maps.current.isPositionWall(self)) {
+	        	self.x = oldX;
+	        	self.y = oldY;
+	        }
+
 		}
 		Enemy.List[id] = self;
 	}
@@ -302,10 +316,10 @@
 
 	Enemy.randomlyGenerate = function(){
         //Math.random() returns a number between 0 and 1
-        var x = Math.random()*currentMap.width;
-        var y = Math.random()*currentMap.height;
-        var height = 64;
-        var width = 64;
+        var x = Math.random()*Maps.current.width;
+        var y = Math.random()*Maps.current.height;
+        var height = 64 * 1.5;
+        var width = 64 * 1.5;
         var id = Math.random();
         if(Math.random() < 0.5) {
 			Enemy(id,x,y,width,height,Img.bat, 2, 1);
@@ -351,8 +365,8 @@
 
 	Upgrade.randomlyGenerate= function(){
         //Math.random() returns a number between 0 and 1
-        var x = Math.random()*currentMap.width;
-        var y = Math.random()*currentMap.height;
+        var x = Math.random()*Maps.current.width;
+        var y = Math.random()*Maps.current.height;
         var height = 32;
         var width = 32;
         var id = Math.random();
@@ -379,11 +393,11 @@
 			self.x += self.spdX;
 			self.y += self.spdY;
 
-			if(self.x < 0 || self.x > currentMap.width) {
+			if(self.x < 0 || self.x > Maps.current.width) {
 				self.spdX = -self.spdX;
 			}
 
-			if(self.y < 0 || self.y > currentMap.height) {
+			if(self.y < 0 || self.y > Maps.current.height) {
 				self.spdY = -self.spdY
 			}
 		}
@@ -418,6 +432,10 @@
             		toRemove = true;
             		player.hp -= 1;
             	}
+            }
+
+            if(Maps.current.isPositionWall(b)){
+            	toRemove = true;
             }
 
             if(toRemove) {
