@@ -1,25 +1,36 @@
-<canvas id="ctx" width="500" height="500" style="border: 1px solid #000"></canvas>
+<canvas style="margin: 0px" id="canvas" width="500" height="500" style="border: 1px solid #000"></canvas>
 
 <div id="inventory"></div>
 <script type="text/javascript" src="./js/Entities.js"></script>
 <script type="text/javascript" src="./js/Inventory.js"></script>
 <script type="text/javascript">
-	var ctx  = document.getElementById('ctx').getContext('2d')
+	let canvas  = document.getElementById('canvas');
+	var ctx  = canvas.getContext('2d');
 
-	//1. Modify Settings =
-	ctx.font = '30px Arial';  //; font used
-	// ctx.fillStyle = 'red';		// color of the text and forms
-	// ctx.globalAlpha = 0.5;		// transparency 0: invisible ; 1: visible
-	
-	// 2. Draw something
-	// ctx.fillText('Hello',50,50); //write text ... ctx.fillText('text', x, y)
-	// ctx.fillRect(50,50,100,100); // draw rectangle .. ctx.fillRect(startX, startY, width, height)
-	// ctx.clearRect(75,75,100,100); // clear canvas ... ctx.fillRect(startX, startY, width, height)
 	const DISTANCE_COLLIDING= 30;
 	const TILE_SIZE = 32;
-	const WIDTH= 500;
-	const HEIGHT= 500;
+	let WIDTH= 500;
+	let HEIGHT= 500;
 	let timeWhenGameStartedssddd = Date.now();
+	let resizeCanvas = function() {
+		WIDTH = window.innerWidth - 10;
+		HEIGHT = window.innerHeight - 34;
+
+		canvas.width = WIDTH;
+		canvas.height = HEIGHT;
+
+		ctx.font = '30px Arial';  //; font used 
+		ctx.mozImageSmoothingEnabled = false;
+		ctx.msImageSmoothingEnabled = false;
+		ctx.imageSmoothingEnabled = false;
+	}
+
+	resizeCanvas();
+
+	window.addEventListener('resize', function(){
+		resizeCanvas();	
+	});
+
 	let frameCount = 0;
 	let score = 0;
 	let pauseGame = false;
@@ -52,8 +63,8 @@
 
 
 	document.onmousemove = function (mouse){
-		var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
-		var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+		var mouseX = mouse.clientX - canvas.getBoundingClientRect().left;
+		var mouseY = mouse.clientY - canvas.getBoundingClientRect().top;
 
 		// mouseX -= player.x;
 		// mouseY -= player.y;
