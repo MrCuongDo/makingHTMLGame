@@ -75,6 +75,10 @@
 	Player = function() {
 		let self = Actor('player','myId',50,30,50 * 1.5,70* 1.5,Img.player,20,1);
 
+		self.maxMoveSpd = 10;  // overide max move speed 
+		self.pressingMouseLeft= false;
+		self.pressingMouseRight= false;
+
 		let super_update = self.update;
 		self.update = function() {
 			super_update();
@@ -85,48 +89,13 @@
 				self.performSpecialAttack();
 			}
 		}
-		
-		self.updatePosition = function () {
-			let oldX = self.x;
-			let oldY = self.y;
-			if(self.pressingRight)
-            	self.x += 10;
-	        if(self.pressingLeft)
-	            self.x -= 10;
-	        if(self.pressingDown)
-	            self.y += 10;
-	        if(self.pressingUp)
-	            self.y -= 10;
-	       
-	        //ispositionvalid
-	        if(self.x < self.width/2)
-	            self.x = self.width/2; 
-	        if(self.x > Maps.current.width-self.width/2)
-	            self.x = Maps.current.width - self.width/2;
-	        if(self.y < self.height/2)
-	            self.y = self.height/2;
-	        if(self.y > Maps.current.height - self.height/2)
-	            self.y = Maps.current.height - self.height/2;
-
-	        if(Maps.current.isPositionWall(self)) {
-	        	self.x = oldX;
-	        	self.y = oldY;
-	        }
-		}
 
 		self.onDeath =  function () {
 			let timeSurvived = Date.now() - timeWhenGameStarted;
 				console.log(`you lost! You servived for ${timeSurvived} ms with score: ${score}!`);
 				startNewGame();
 		}
-		//
-		self.pressingUp= false;
-		self.pressingDown= false;
-		self.pressingLeft= false;
-		self.pressingRight= false;
 
-		self.pressingMouseLeft= false;
-		self.pressingMouseRight= false;
 		
 		return self;
 	}
@@ -140,15 +109,74 @@
 		self.aimAngle= 0;
 		self.attackCounter= 0;
 		self.animateCounter = 0;
+		//
+		self.maxMoveSpd = 3;
+		self.pressingUp= false;
+		self.pressingDown= false;
+		self.pressingLeft= false;
+		self.pressingRight= false;
 
 		let super_update = self.update;
 		self.update = function() {
 			super_update();
 			self.attackCounter += self.atkSpd;
-			self.animateCounter += 0.2;
 			if(self.hp <= 0) {
 				self.onDeath();
 			}
+		}
+
+		self.updatePosition = function () {
+			let oldX = self.x;
+			let oldY = self.y;
+
+			if (self.pressingRight || self.pressingLeft|| self.pressingDown|| self.pressingUp)
+				self.animateCounter += 0.2;
+
+			let rightBumper = {x: self.x +40 , y: self.y }
+			let leftBumper = {x: self.x -40 , y: self.y }
+			let upBumper = {x: self.x, y: self.y -16}
+			let downBumper = {x: self.x, y: self.y + 40}
+
+			if(Maps.current.isPositionWall(rightBumper)){
+				self.x -= 5;
+			}else {
+				if(self.pressingRight )
+            		self.x += self.maxMoveSpd;
+			}
+			if(Maps.current.isPositionWall(leftBumper)){
+				self.x += 5;
+			}else {
+				if(self.pressingLeft)
+	            	self.x -= self.maxMoveSpd;
+			}
+			if(Maps.current.isPositionWall(downBumper)){
+				self.y -= 5;
+			}else {
+				if(self.pressingDown )
+	            	self.y += self.maxMoveSpd;
+			}
+			if(Maps.current.isPositionWall(upBumper)){
+				self.y += 5;
+			}else {
+	        	if(self.pressingUp)
+	            	self.y -= self.maxMoveSpd;
+			}
+
+	       
+	        //ispositionvalid
+	        if(self.x < self.width/2)
+	            self.x = self.width/2; 
+	        if(self.x > Maps.current.width-self.width/2)
+	            self.x = Maps.current.width - self.width/2;
+	        if(self.y < self.height/2)
+	            self.y = self.height/2;
+	        if(self.y > Maps.current.height - self.height/2)
+	            self.y = Maps.current.height - self.height/2;
+
+	        // if(Maps.current.isPositionWall(self)) {
+	        // 	self.x = oldX;
+	        // 	self.y = oldY;
+	        // }
 		}
 
 		self.draw = function (){
@@ -227,13 +255,10 @@
 		let super_update = self.update;
 		self.update = function() {
 			super_update();
+			self.animateCounter += 0.2;
 			self.updateAim();
+			self.updateKeyPress();
 			self.performAttack();
-
-			// var colliding = player.testCollision(self);
-			// if(colliding){
-			// 	player.hp -= 1;
-			// }
 		}	
 
 		let super_draw = self.draw;
@@ -267,7 +292,6 @@
 			ctx.strokeStyle = 'black';
 			ctx.strokeRect(x-hpBarLength / 2,y,hpBarLength,10); // draw hp bar that has been lost
 			ctx.restore();
-
 		}
 
 		self.onDeath =  function () {
@@ -282,24 +306,35 @@
 			self.aimAngle = Math.atan2(diffY,diffX) / Math.PI * 180; 
 		}
 
-		self.updatePosition = function () {
+		self.updateKeyPress = function() {
 			let diffX = player.x - self.x;
 			let diffY = player.y - self.y;
 
-			if(diffX > 0) self.x += 3;
-			else self.x -= 3; 
-
-			if(diffY > 0) self.y += 3;
-			else self.y -= 3;
-
-			let oldX = self.x;
-        	let oldY = self.y;
-			if(Maps.current.isPositionWall(self)) {
-	        	self.x = oldX;
-	        	self.y = oldY;
-	        }
-
+			self.pressingRight = diffX > 3;
+			self.pressingLeft = diffX <-3;
+			self.pressingDown = diffY > 3;
+			self.pressingUp = diffY <-3;
 		}
+
+		// self.updatePosition = function () {
+		// 	let oldX = self.x;
+  //       	let oldY = self.y;
+
+		// 	let diffX = player.x - self.x;
+		// 	let diffY = player.y - self.y;
+
+		// 	if(diffX > 0) self.x += 3;
+		// 	else self.x -= 3; 
+
+		// 	if(diffY > 0) self.y += 3;
+		// 	else self.y -= 3;
+
+		// 	if(Maps.current.isPositionWall(self)) {
+	 //        	self.x = oldX;
+	 //        	self.y = oldY;
+	 //        }
+
+		// }
 		Enemy.List[id] = self;
 	}
 
@@ -389,6 +424,40 @@
         self.spdX = spdX;
         self.spdY = spdY;
 
+        let super_update = self.update;
+        self.update = function () {
+        	super_update();
+        	let toRemove = false;
+        	self.timer++;
+            if(self.timer % 75 === 0){
+            	toRemove = true;
+            }
+
+            if(self.combatType === 'player') {// bullet was shoot by player
+            	for(let enemyIndex in Enemy.List) {
+					if(self.testCollision(Enemy.List[enemyIndex])){
+						toRemove = true;
+						Enemy.List[enemyIndex].hp -= 1;
+						break;
+					}
+					
+	            }
+            }else if (self.combatType === 'enemy') {
+            	if(self.testCollision(player)) {
+            		toRemove = true;
+            		player.hp -= 1;
+            	}
+            }
+
+            if(Maps.current.isPositionWall(self)){
+            	toRemove = true;
+            }
+
+            if(toRemove) {
+            	delete Bullet.List[self.id];
+        	}
+
+        }
 		self.updatePosition = function(){
 			self.x += self.spdX;
 			self.y += self.spdY;
@@ -412,35 +481,7 @@
  			let b = Bullet.List[key];
  			b.update();
 
-        	let toRemove = false;
-        	b.timer++;
-            if(b.timer % 75 === 0){
-            	toRemove = true;
-            }
-
-            if(b.combatType === 'player') {// bullet was shoot by player
-            	for(let enemyIndex in Enemy.List) {
-					if(b.testCollision(Enemy.List[enemyIndex])){
-						toRemove = true;
-						Enemy.List[enemyIndex].hp -= 1;
-						break;
-					}
-					
-	            }
-            }else if (b.combatType === 'enemy') {
-            	if(b.testCollision(player)) {
-            		toRemove = true;
-            		player.hp -= 1;
-            	}
-            }
-
-            if(Maps.current.isPositionWall(b)){
-            	toRemove = true;
-            }
-
-            if(toRemove) {
-            	delete Bullet.List[b.id];
-        	}
+        	
         }
 	} 
 

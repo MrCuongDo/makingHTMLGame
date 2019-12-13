@@ -160,10 +160,13 @@
  		self.isPositionWall = function(pt){
 			var gridX = Math.floor(pt.x / TILE_SIZE);
 			var gridY = Math.floor(pt.y / TILE_SIZE);
-			if(gridX < 0 || gridX >= self.grid[0].length)
+			if(gridX < 0 || gridX >= self.grid[0].length){
 				return true;
-			if(gridY < 0 || gridY >= self.grid.length)
+			}
+			if(gridY < 0 || gridY >= self.grid.length){
 				return true;
+			}
+
 			return self.grid[gridY][gridX];
 		}
 
