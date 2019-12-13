@@ -316,25 +316,6 @@
 			self.pressingUp = diffY <-3;
 		}
 
-		// self.updatePosition = function () {
-		// 	let oldX = self.x;
-  //       	let oldY = self.y;
-
-		// 	let diffX = player.x - self.x;
-		// 	let diffY = player.y - self.y;
-
-		// 	if(diffX > 0) self.x += 3;
-		// 	else self.x -= 3; 
-
-		// 	if(diffY > 0) self.y += 3;
-		// 	else self.y -= 3;
-
-		// 	if(Maps.current.isPositionWall(self)) {
-	 //        	self.x = oldX;
-	 //        	self.y = oldY;
-	 //        }
-
-		// }
 		Enemy.List[id] = self;
 	}
 
