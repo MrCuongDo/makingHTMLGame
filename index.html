@@ -1,4 +1,4 @@
-<canvas style="margin: 0px" id="canvas" width="500" height="500" style="border: 1px solid #000"></canvas>
+<canvas  id="canvas" width="500" height="500" style="border: 1px solid #000"></canvas>
 
 <div id="inventory"></div>
 <script type="text/javascript" src="./js/Entities.js"></script>
@@ -9,20 +9,33 @@
 
 	const DISTANCE_COLLIDING= 30;
 	const TILE_SIZE = 32;
-	let WIDTH= 500;
-	let HEIGHT= 500;
+	let WIDTH= 640;
+	let HEIGHT= 360;
+	let CANVAS_WIDTH= 500;
+	let CANVAS_HEIGHT= 500;
 	let timeWhenGameStartedssddd = Date.now();
+
 	let resizeCanvas = function() {
-		WIDTH = window.innerWidth - 10;
-		HEIGHT = window.innerHeight - 34;
+		CANVAS_WIDTH = window.innerWidth ;
+		CANVAS_HEIGHT = window.innerHeight ;
+
+		let ratio = 16 / 9;
+		if(CANVAS_HEIGHT < CANVAS_WIDTH / ratio ) {
+			CANVAS_WIDTH = CANVAS_HEIGHT * ratio;
+		}else {
+			CANVAS_HEIGHT = CANVAS_WIDTH / ratio;
+		}
 
 		canvas.width = WIDTH;
 		canvas.height = HEIGHT;
 
 		ctx.font = '30px Arial';  //; font used 
-		ctx.mozImageSmoothingEnabled = false;
+		ctx.mozImageSmoothingEnabled = false; // better graphic for pixel art
 		ctx.msImageSmoothingEnabled = false;
 		ctx.imageSmoothingEnabled = false;
+
+		canvas.style.width = ''+CANVAS_WIDTH+'px';
+		canvas.style.height = ''+CANVAS_HEIGHT+'px';
 	}
 
 	resizeCanvas();
@@ -69,8 +82,8 @@
 		// mouseX -= player.x;
 		// mouseY -= player.y;
 
-		mouseX -= WIDTH/2;
-		mouseY -= HEIGHT/2;
+		mouseX -= CANVAS_WIDTH/2;
+		mouseY -= CANVAS_HEIGHT/2;
 
 		player.aimAngle = Math.atan2(mouseY,mouseX) / Math.PI * 180;
 	}
